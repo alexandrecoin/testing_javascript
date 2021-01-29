@@ -1,22 +1,30 @@
-const Cart =  require('./Cart');
+const { db, closeDatabaseConnection } = require('./dbConnection');
+const { createCart, addItem } = require('./Cart');
 
-test('The addToCart function can add an item to the cart', () => {
-    const cart = new Cart();
-    cart.addToCart('cheesecake');
-    expect(cart.items).toEqual(['cheesecake']);
+afterAll(async () => await closeDatabaseConnection());
+
+test('It creates a cart for a given username',  async () => {
+    await db('carts').truncate();
+    await createCart('test_user');
+    const result = await db.select('username').from('carts');
+    expect(result).toEqual([{ username: 'test_user' }]);
 });
 
-test('The removeFromCart function can remove an item to the cart', () => {
-    const cart = new Cart();
-    cart.addToCart('cheesecake');
-    cart.removeFromCart('cheesecake');
-    expect(cart.items).toEqual([]);
-});
+test('It adds an item to a cart', async () => {
+   await db('carts').truncate();
+   await db('carts_items').truncate();
 
-test('The increaseItemQuantity adds an already existing item to the cart', () => {
-   const cart = new Cart();
-   cart.addToCart('cheesecake');
-   cart.addToCart('banana');
-   cart.increaseItemQuantity('cheesecake');
-   expect(cart.items).toEqual(['cheesecake', 'banana', "cheesecake"]);
+   await createCart('test_user');
+   const { id: cartId } = await db
+       .select()
+       .from('carts')
+       .where({ username: 'test_user' });
+
+   await addItem(cartId, 'cheesecake');
+   const result = await db
+       .select('itemName')
+       .from('carts_items');
+   expect(result).toEqual([{ cartId, itemName: 'cheesecake' }]);
+
+   await closeDatabaseConnection();
 });
