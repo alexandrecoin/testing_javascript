@@ -19,5 +19,9 @@
   "homepage": "https://github.com/alexandrecoin/testing_javascript#readme",
   "devDependencies": {
     "jest": "^26.6.3"
+  },
+  "dependencies": {
+    "knex": "^0.21.16",
+    "sqlite3": "^5.0.1"
   }
 }
