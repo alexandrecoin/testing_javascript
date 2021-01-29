@@ -1,18 +1,10 @@
+const assert = require('assert');
 const Cart =  require('./Cart');
 
 const cart = new Cart();
 cart.addToCart('cheesecake');
 
-const hasOneItem = cart.items.length === 1;
-const hasCheesecake = cart.items[0] === 'cheesecake';
+assert.deepStrictEqual(cart.items, ['cheesecake']);
 
-if (hasOneItem && hasCheesecake) {
-    console.log('The addToCart function added an item to the cart');
-} else {
-    const actualCartContent = cart.items.join(', ');
+console.log('The addToCart function added an item to the cart');
 
-    console.error("The addToCart function didn't do what we expect!");
-    console.error(`Here is the actual content of the cart: ${actualCartContent}`);
-
-    throw new Error("Test failed!");
-}
