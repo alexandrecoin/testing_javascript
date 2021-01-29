@@ -15,6 +15,13 @@ class Cart {
             }
         }
     }
+
+    increaseItemQuantity(item) {
+        const indexOfExistingItem = this.items.indexOf(item);
+        if (indexOfExistingItem >= 0) {
+            this.items.push(item);
+        }
+    }
 }
 
 module.exports = Cart;
