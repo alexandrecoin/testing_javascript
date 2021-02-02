@@ -4,8 +4,8 @@
   "description": "Based on \"Testing JavaScript applications\" written by Lucas Da Costa",
   "main": "Cart.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "jest"
+    "start": "node index.js",
+    "test:watch": "jest --watchAll"
   },
   "repository": {
     "type": "git",
