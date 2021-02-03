@@ -21,19 +21,28 @@ describe('#inventoryController', () => {
   });
 
   describe('getInventory', () => {
-    inventory
-      .set("cheesecake", 1)
-      .set("macarroon", 3)
-      .set("croissant", 3)
-      .set("eclaire", 7);
-    const result = getInventory();
+    test('it returns an object with values from the inventory', () => {
+      inventory
+        .set("cheesecake", 1)
+        .set("macarroon", 3)
+        .set("croissant", 3)
+        .set("eclaire", 7);
+      const result = getInventory();
+  
+      expect(result).toEqual({
+        cheesecake: 1,
+        macarroon: 3,
+        croissant: 3,
+        eclaire: 7,
+        generatedAt: expect.any(Date)
+      })
+    });
 
-    expect(result).toEqual({
-      cheesecake: 1,
-      macarroon: 3,
-      croissant: 3,
-      eclaire: 7,
-      generatedAt: expect.any(Date)
-    })
+    test('the generatedAt date is in the past', () => {
+      const result = getInventory();
+      const currentTime = Date.now() + 1;
+      const isPastTimeStamp = result.generatedAt.getTime() < currentTime;
+      expect(isPastTimeStamp).toBeBefore(currentTime);
+    });
   });
 });

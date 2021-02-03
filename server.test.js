@@ -33,7 +33,8 @@ describe('#Server', () => {
   });
 });
 
-  
+
+// Integration tests
 describe("addItem", () => {
 
   test("correct response", async () => {

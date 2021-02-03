@@ -18,7 +18,7 @@ const getInventory = () => {
       },
     {} 
   );
-  return { ...contents, generatedAt: new Date() };
+  return { ...contents, generatedAt: new Date(new Date()) };
 }
 
 module.exports = {
