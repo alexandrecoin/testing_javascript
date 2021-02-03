@@ -3,20 +3,34 @@ const {
   addToInventory,
   getInventory
 } = require('./inventoryController');
+const logger = require('./logger');
 
-beforeEach(() => inventory.set("cheesecake", 0));
+beforeAll(() => jest.spyOn(logger, "logInfo"));
+beforeEach(() => { 
+  inventory.clear();
+  jest.clearAllMocks()
+});
 
 describe('#inventoryController', () => {
 
   describe('addToInventory', () => {
     test('it throws an error for non valid quantity', () => {
       expect(() => addToInventory('cheesecake', "3")).toThrow();
-      expect(inventory.get('cheesecake')).toBe(0)
     })
   
     test('it updates the inventory with a valid number', () => {
       expect(() => addToInventory('cheesecake', 1)).not.toThrow();
       expect(inventory.get('cheesecake')).toBe(1);
+    });
+
+    test('it logs the item and quantity added', () => {
+      addToInventory('cheesecake', 2);
+
+      expect(logger.logInfo.mock.calls).toHaveLength(1);
+      const [firstArg, secondeArg] = logger.logInfo.mock.calls[0];
+
+      expect(firstArg).toEqual({ "item": "cheesecake", "quantity": 2 });
+      expect(secondeArg).toEqual("items have been added to the inventory.");
     });
   });
 
@@ -43,6 +57,17 @@ describe('#inventoryController', () => {
       const currentTime = Date.now() + 1;
       const isPastTimeStamp = result.generatedAt.getTime() < currentTime;
       expect(isPastTimeStamp).toBeBefore(currentTime);
+    });
+
+    test('it logs the items fetched', () => {
+        inventory.set('cheesecake', 2);
+        getInventory();
+
+        expect(logger.logInfo.mock.calls).toHaveLength(1);
+        const [firstArg, secondArg] = logger.logInfo.mock.calls[0];
+        expect(firstArg).toEqual({ contents: { cheesecake: 2 } });
+        expect(secondArg).toEqual("inventory items fetched.");
+
     });
   });
 });
