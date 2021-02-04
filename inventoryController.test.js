@@ -14,35 +14,40 @@ beforeEach(() => {
 describe('#inventoryController', () => {
 
   describe('addToInventory', () => {
-    test('it throws an error for non valid quantity', () => {
-      expect(() => addToInventory('cheesecake', "3")).toThrow();
-    });
 
-    test('it logs the error for non valid quantity', () => {
-      jest.spyOn(logger, 'logError');
-      
-      try { addToInventory('cheesecake', "2") } catch (error) {}
-
-      expect(logger.logError.mock.calls).toHaveLength(1);
-      const [firstArg] = logger.logError.mock.calls;
-      expect(firstArg).toEqual(['cheesecake could not be added.']);
+    describe('When quantity is invalid', () => {
+      test('it throws an error', () => {
+        expect(() => addToInventory('cheesecake', "3")).toThrow();
+      });
+  
+      test('it logs the error', () => {
+        jest.spyOn(logger, 'logError');
+  
+        try { addToInventory('cheesecake', "2") } catch (error) {}
+  
+        expect(logger.logError.mock.calls).toHaveLength(1);
+        const [firstArg] = logger.logError.mock.calls;
+        expect(firstArg).toEqual(['cheesecake could not be added.']);
+      });
     });
   
-    test('it updates the inventory with a valid number', () => {
-      expect(() => addToInventory('cheesecake', 1)).not.toThrow();
-      expect(inventory.get('cheesecake')).toBe(1);
+    describe('When quantity is valid', () => {
+      test('it updates the inventory with a valid number', () => {
+        expect(() => addToInventory('cheesecake', 1)).not.toThrow();
+        expect(inventory.get('cheesecake')).toBe(1);
+      });
+  
+      test('it logs the item and quantity added', () => {
+        addToInventory('cheesecake', 2);
+  
+        expect(logger.logInfo.mock.calls).toHaveLength(1);
+        const [firstArg, secondeArg] = logger.logInfo.mock.calls[0];
+  
+        expect(firstArg).toEqual({ "item": "cheesecake", "quantity": 2 });
+        expect(secondeArg).toEqual("items have been added to the inventory.");
+      });
     });
-
-    test('it logs the item and quantity added', () => {
-      addToInventory('cheesecake', 2);
-
-      expect(logger.logInfo.mock.calls).toHaveLength(1);
-      const [firstArg, secondeArg] = logger.logInfo.mock.calls[0];
-
-      expect(firstArg).toEqual({ "item": "cheesecake", "quantity": 2 });
-      expect(secondeArg).toEqual("items have been added to the inventory.");
     });
-  });
 
   describe('getInventory', () => {
     test('it returns an object with values from the inventory', () => {
