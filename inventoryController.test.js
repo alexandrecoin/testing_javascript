@@ -5,15 +5,8 @@ const {
 } = require('./inventoryController');
 
 const logger = require('./logger');
-jest.mock("./logger", () => ({ 
-  logInfo: jest.fn(), 
-  logError: jest.fn()
-}));
+jest.mock('./logger');
 
-beforeAll(() => {
-  jest.spyOn(logger, "logInfo").mockImplementation(jest.fn())
-  jest.spyOn(logger, 'logError').mockImplementation(jest.fn());
-});
 beforeEach(() => { 
   inventory.clear();
   jest.clearAllMocks()
