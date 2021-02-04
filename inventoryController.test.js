@@ -5,7 +5,10 @@ const {
 } = require('./inventoryController');
 const logger = require('./logger');
 
-beforeAll(() => jest.spyOn(logger, "logInfo"));
+beforeAll(() => {
+  jest.spyOn(logger, "logInfo").mockImplementation(jest.fn())
+  jest.spyOn(logger, 'logError').mockImplementation(jest.fn());
+});
 beforeEach(() => { 
   inventory.clear();
   jest.clearAllMocks()
@@ -21,7 +24,6 @@ describe('#inventoryController', () => {
       });
   
       test('it logs the error', () => {
-        jest.spyOn(logger, 'logError');
   
         try { addToInventory('cheesecake', "2") } catch (error) {}
   
