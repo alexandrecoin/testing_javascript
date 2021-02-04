@@ -16,7 +16,17 @@ describe('#inventoryController', () => {
   describe('addToInventory', () => {
     test('it throws an error for non valid quantity', () => {
       expect(() => addToInventory('cheesecake', "3")).toThrow();
-    })
+    });
+
+    test('it logs the error for non valid quantity', () => {
+      jest.spyOn(logger, 'logError');
+      
+      try { addToInventory('cheesecake', "2") } catch (error) {}
+
+      expect(logger.logError.mock.calls).toHaveLength(1);
+      const [firstArg] = logger.logError.mock.calls;
+      expect(firstArg).toEqual(['cheesecake could not be added.']);
+    });
   
     test('it updates the inventory with a valid number', () => {
       expect(() => addToInventory('cheesecake', 1)).not.toThrow();

@@ -3,6 +3,7 @@ const inventory = new Map();
 
 const addToInventory = (item, quantity) => {
   if (typeof quantity !== "number") {
+    logger.logError(`${item} could not be added.`);
     throw new Error('You must enter a valid number');
   }
   const currentItemNumber = inventory.get(item) || 0;
