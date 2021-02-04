@@ -1,15 +1,15 @@
-const logger = require('./logger');
+const { logInfo, logError } = require('./logger');
 const inventory = new Map();
 
 const addToInventory = (item, quantity) => {
   if (typeof quantity !== "number") {
-    logger.logError(`${item} could not be added.`);
+    logError(`${item} could not be added.`);
     throw new Error('You must enter a valid number');
   }
   const currentItemNumber = inventory.get(item) || 0;
   const newItemNumber = currentItemNumber + quantity;
   inventory.set(item, newItemNumber);
-  logger.logInfo({ item, quantity }, "items have been added to the inventory.");
+  logInfo({ item, quantity }, "items have been added to the inventory.");
   return newItemNumber;
 }
 
@@ -20,7 +20,7 @@ const getInventory = () => {
     return { ...contents, [name]: quantity }; 
   }, {}
   );
-  logger.logInfo({ contents }, "inventory items fetched.");
+  logInfo({ contents }, "inventory items fetched.");
   return { ...contents, generatedAt: new Date() };
  };
 

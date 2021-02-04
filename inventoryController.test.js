@@ -3,7 +3,12 @@ const {
   addToInventory,
   getInventory
 } = require('./inventoryController');
+
 const logger = require('./logger');
+jest.mock("./logger", () => ({ 
+  logInfo: jest.fn(), 
+  logError: jest.fn()
+}));
 
 beforeAll(() => {
   jest.spyOn(logger, "logInfo").mockImplementation(jest.fn())
