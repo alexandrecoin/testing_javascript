@@ -33,7 +33,6 @@ describe('#Server', () => {
   });
 });
 
-
 // Integration tests
 describe("addItem", () => {
 
@@ -57,5 +56,20 @@ describe("addItem", () => {
     await request(app).post('/carts/test_user/items/cheesecake'); 
     expect(carts.get("test_user")).toEqual(["cheesecake"]);
     });
+});
+
+describe('deleteItem', () => {
+
+  test('When item is in cart', async () => {
+    carts.set('test_user', 'cheesecake');
+    const response = await request(app).delete('/carts/test_user/items/cheesecake');
+    expect(response.status).toEqual(200);
+    expect(carts.get('test_user')).toEqual([]);
+  });
+
+  test('When user cart is empty', async () => {
+    const response = await request(app).delete('/carts/test_user/items/cheesecake');
+    expect(response.status).toEqual(404);
+  });
 });
 

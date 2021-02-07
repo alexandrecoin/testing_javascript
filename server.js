@@ -22,6 +22,19 @@ app.post('/carts/:username/items/:item', (req, res) => {
     res.status(201).json(newItems);
 });
 
+app.delete('/carts/:username/items/:item', (req, res) => {
+    const { username, item } = req.params;
+
+    if (!carts.has(username) || !carts.get(username).includes(item)) {
+        return res.status(404).json({ err: "An error has occurred" });
+    }
+
+    const newItems = ([carts.get(username)]).filter(i => i !== item);
+    inventory.set(item, (inventory.get(item) + 1));
+    carts.set(username, newItems);
+    res.status(200).json({ message: `${item} deleted` });
+});
+
 module.exports = {
     app,
     inventory,
