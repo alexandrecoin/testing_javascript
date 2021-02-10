@@ -1,8 +1,7 @@
 const express = require("express");
 const app = express();
 
-const { addItemToCart, carts } = require('./cartController');
-const { inventory } = require('./inventoryController');
+const { addItemToCart, deleteItemFromCart, carts } = require('./cartController');
 
 app.get('/carts/:username/items', (req, res) => {
     const userCart = carts.get(req.params.username);
@@ -20,16 +19,14 @@ app.post('/carts/:username/items/:item', (req, res) => {
 });
 
 app.delete('/carts/:username/items/:item', (req, res) => {
-    const { username, item } = req.params;
 
-    if (!carts.has(username) || !carts.get(username).includes(item)) {
-        return res.status(404).json({ err: "An error has occurred" });
+    try {
+        const { username, item } = req.params;
+        deleteItemFromCart(username, item);
+        res.status(200).json({ message: `${item} deleted` });
+    } catch(e) {
+        res.status(e.status).json(e.message);
     }
-
-    const newItems = ([carts.get(username)]).filter(i => i !== item);
-    inventory.set(item, (inventory.get(item) + 1));
-    carts.set(username, newItems);
-    res.status(200).json({ message: `${item} deleted` });
 });
 
 module.exports = {

@@ -15,4 +15,20 @@ const addItemToCart = (username, item) => {
     return newItems;
 };
 
-module.exports = { addItemToCart, carts };
+const deleteItemFromCart = (username, item) => {
+    if (!carts.has(username) || !carts.get(username).includes(item)) {
+        const err = new Error({ message: 'An error has occured' });
+        err.status = 404;
+        throw err;
+    }
+
+    const newItems = ([carts.get(username)]).filter(i => i !== item);
+    inventory.set(item, (inventory.get(item) + 1));
+    carts.set(username, newItems);
+};
+
+module.exports = {
+    addItemToCart,
+    deleteItemFromCart,
+    carts
+};
