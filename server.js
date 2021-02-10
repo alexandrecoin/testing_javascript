@@ -1,8 +1,8 @@
 const express = require("express");
 const app = express();
 
-let carts = new Map();
-let inventory = new Map();
+const { addItemToCart, carts } = require('./cartController');
+const { inventory } = require('./inventoryController');
 
 app.get('/carts/:username/items', (req, res) => {
     const userCart = carts.get(req.params.username);
@@ -10,16 +10,13 @@ app.get('/carts/:username/items', (req, res) => {
 });
 
 app.post('/carts/:username/items/:item', (req, res) => {
-    const { username, item } = req.params;
-
-    if (!inventory.get(item)) {
-        res.status(404).json({ err: 'Could not find item in inventory' });
+    try {
+        const { username, item } = req.params;
+        const newItems = addItemToCart(username, item);
+        res.status(201).json(newItems);
+    } catch (err) {
+        res.status(err.code).json(err.message);
     }
-
-    inventory.set(item, inventory.get(item) - 1);
-    const newItems = (carts.get(username) || []).concat(item);
-    carts.set(username, newItems);
-    res.status(201).json(newItems);
 });
 
 app.delete('/carts/:username/items/:item', (req, res) => {
@@ -37,6 +34,4 @@ app.delete('/carts/:username/items/:item', (req, res) => {
 
 module.exports = {
     app,
-    inventory,
-    carts
 };

@@ -1,4 +1,6 @@
-const { app, inventory, carts } = require('./server');
+const { app } = require('./server');
+const { carts } = require('./cartController');
+const { inventory } = require('./inventoryController');
 const request = require('supertest');
 
 beforeEach(() => {
@@ -38,6 +40,7 @@ describe("addItem", () => {
 
   test("correct response", async () => {
     const addItemResponse = await request(app).post('/carts/test_user/items/cheesecake');
+    console.log(addItemResponse);
     expect(addItemResponse.status).toBe(201);
     expect(addItemResponse.body).toEqual(["cheesecake"]);
   });

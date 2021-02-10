@@ -11,8 +11,16 @@ const addToInventory = (item, quantity) => {
   inventory.set(item, newItemNumber);
   logInfo({ item, quantity }, "items have been added to the inventory.");
   return newItemNumber;
-}
+};
 
+const removeFromInventory = (item) => {
+  if (!inventory.has(item) || !inventory.get(item) > 0) {
+    const err = new Error(`${item} is unavailable.`);
+    err.code = 400;
+    throw err;
+  }
+  inventory.set(item, inventory.get(item) - 1);
+};
 
 const getInventory = () => {
   const contentArray = Array.from(inventory.entries());
@@ -27,5 +35,6 @@ const getInventory = () => {
 module.exports = {
   inventory,
   addToInventory,
+  removeFromInventory,
   getInventory
 }
