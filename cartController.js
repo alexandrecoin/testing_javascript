@@ -2,6 +2,10 @@ const { addToInventory, removeFromInventory } = require('./inventoryController')
 
 const carts = new Map();
 
+const getItemsFromCart = username => {
+  return carts.get(username)
+};
+
 const addItemToCart = (username, item) => {
     removeFromInventory(item);
     const newItems = (carts.get(username) || []).concat(item);
@@ -27,6 +31,7 @@ const deleteItemFromCart = (username, item) => {
 
 module.exports = {
     carts,
+    getItemsFromCart,
     addItemToCart,
     deleteItemFromCart
 };

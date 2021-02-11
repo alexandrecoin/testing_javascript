@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
 
-const { addItemToCart, deleteItemFromCart, carts } = require('./cartController');
+const { getItemsFromCart, addItemToCart, deleteItemFromCart } = require('./cartController');
 
 app.get('/carts/:username/items', (req, res) => {
-    const userCart = carts.get(req.params.username);
+    const userCart = getItemsFromCart(req.params.username);
     userCart ? res.status(200).json(userCart) : res.status(404).json({ err: 'Cart not found' });
 });
 

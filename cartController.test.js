@@ -1,4 +1,4 @@
-const { carts, addItemToCart, deleteItemFromCart } = require('./cartController');
+const { carts, getItemsFromCart, addItemToCart, deleteItemFromCart } = require('./cartController');
 const { inventory } = require('./inventoryController');
 
 afterEach(() => {
@@ -6,7 +6,7 @@ afterEach(() => {
     inventory.clear();
 })
 
-describe('Integration | addItemToCart', () => {
+describe('Integration', () => {
     describe('addItemToCart', () => {
         test('adding unavailable items to the cart', () => {
             inventory.set('cheesecake', 0);
@@ -55,6 +55,20 @@ describe('Integration | addItemToCart', () => {
             inventory.set('cheesecake', 0);
             deleteItemFromCart('test_user', 'cheesecake');
             expect(carts.get('test_user')).toEqual([]);
+        });
+    });
+
+    describe('getItemsFromCart', () => {
+       test('Retrieving items from cart', () => {
+          carts.set('test_user', 'cheesecake');
+          const result = getItemsFromCart('test_user');
+          expect(result).toEqual('cheesecake');
+       });
+
+        test('Retrieving items from empty cart', () => {
+            carts.set('test_user', []);
+            const result = getItemsFromCart('test_user');
+            expect(result).toEqual([]);
         });
     });
 });
