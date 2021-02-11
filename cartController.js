@@ -1,4 +1,5 @@
 const { addToInventory, removeFromInventory } = require('./inventoryController');
+const logger = require("./logger");
 
 const carts = new Map();
 
@@ -10,6 +11,7 @@ const addItemToCart = (username, item) => {
     removeFromInventory(item);
     const newItems = (carts.get(username) || []).concat(item);
     carts.set(username, newItems);
+    logger.log(`${item} has been added to ${username} cart.`);
     return newItems;
 };
 

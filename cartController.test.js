@@ -1,5 +1,6 @@
 const { carts, getItemsFromCart, addItemToCart, deleteItemFromCart } = require('./cartController');
 const { inventory } = require('./inventoryController');
+const fs = require('fs');
 
 afterEach(() => {
     carts.clear();
@@ -8,6 +9,11 @@ afterEach(() => {
 
 describe('Integration', () => {
     describe('addItemToCart', () => {
+
+        beforeEach(() => {
+            fs.writeFileSync("/tmp/logs.out", "");
+        })
+
         test('adding unavailable items to the cart', () => {
             inventory.set('cheesecake', 0);
             carts.set('test_user', []);
@@ -32,6 +38,15 @@ describe('Integration', () => {
             addItemToCart('test_user', 'cheesecake');
             expect(carts.get('test_user')).toEqual(['cheesecake']);
             expect(inventory.get('cheesecake')).toEqual(0);
+        });
+
+        test('logging added items', () => {
+            inventory.set('cheesecake', 1);
+            carts.set('test_user', []);
+            addItemToCart('test_user', 'cheesecake');
+
+            const logs = fs.readFileSync("/tmp/logs.out", "utf-8");
+            expect(logs).toContain('cheesecake has been added to test_user cart.\n');
         });
     });
 
