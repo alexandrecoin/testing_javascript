@@ -16,7 +16,11 @@ const deleteItemFromCart = (username, item) => {
         throw err;
     }
 
-    const newItems = ([carts.get(username)]).filter(i => i !== item);
+    let allItems = carts.get(username);
+    if(typeof allItems === 'string') {
+        allItems = [allItems]
+    }
+    const newItems = (allItems).filter(i => i !== item);
     addToInventory(item, newItems.length)
     carts.set(username, newItems);
 };
