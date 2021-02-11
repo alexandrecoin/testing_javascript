@@ -1,15 +1,9 @@
-const { inventory } = require('./inventoryController');
+const { addToInventory, removeFromInventory } = require('./inventoryController');
 
 const carts = new Map();
 
 const addItemToCart = (username, item) => {
-    if (!inventory.get(item)) {
-        const err = new Error({ message : 'Could not find item in inventory' });
-        err.code = 404;
-        throw err;
-    }
-
-    inventory.set(item, inventory.get(item) - 1);
+    removeFromInventory(item);
     const newItems = (carts.get(username) || []).concat(item);
     carts.set(username, newItems);
     return newItems;
@@ -23,12 +17,12 @@ const deleteItemFromCart = (username, item) => {
     }
 
     const newItems = ([carts.get(username)]).filter(i => i !== item);
-    inventory.set(item, (inventory.get(item) + 1));
+    addToInventory(item, newItems.length)
     carts.set(username, newItems);
 };
 
 module.exports = {
+    carts,
     addItemToCart,
-    deleteItemFromCart,
-    carts
+    deleteItemFromCart
 };
