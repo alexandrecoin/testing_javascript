@@ -1,4 +1,10 @@
-const { carts, getItemsFromCart, addItemToCart, deleteItemFromCart } = require('./cartController');
+const {
+    carts,
+    getItemsFromCart,
+    compliesToItemLimit,
+    addItemToCart,
+    deleteItemFromCart
+} = require('./cartController');
 const { inventory } = require('./inventoryController');
 const fs = require('fs');
 
@@ -86,4 +92,34 @@ describe('Integration', () => {
             expect(result).toEqual([]);
         });
     });
+});
+
+describe('Unit', () => {
+   describe('compliesToItemList', () => {
+      test('returns true for carts with no more than 3 items of a kind', () => {
+         const cart = [
+             "cheesecake",
+             "cheesecake",
+             "almond pie",
+             "brownie"
+         ];
+
+         const result = compliesToItemLimit(cart);
+
+         expect(result).toBe(true);
+      });
+
+      test('returns false for carts with 3 or more items of a kind', () => {
+         const cart = [
+             "cheesecake",
+             "cheesecake",
+             "almond pie",
+             "cheesecake"
+         ];
+
+         const result = compliesToItemLimit(cart);
+
+         expect(result).toBe(false);
+      });
+   });
 });
