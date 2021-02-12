@@ -1,4 +1,4 @@
-module.exports = { 
-  testEnvironment: "node",
-  setupFilesAfterEnv: ["jest-extended"]
+module.exports = {
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['jest-extended'],
 };

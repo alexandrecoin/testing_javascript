@@ -1,4 +1,4 @@
-module.exports = { 
-  logInfo: jest.fn(), 
-  logError: jest.fn()
+module.exports = {
+  logInfo: jest.fn(),
+  logError: jest.fn(),
 };
