@@ -35,7 +35,31 @@ describe('#Server', () => {
   });
 });
 
-// Integration tests
+describe('addItems', () => {
+  test('adding available items', async () => {
+    inventory.set('cheesecake', 3);
+    const response =  await request(app)
+      .post('/carts/test_user/items').send({
+        item: 'cheesecake',
+        quantity: 3
+      })
+      .expect(200)
+      .expect("Content-Type", /json/);
+
+    expect(inventory.get('cheesecake')).toBe(0);
+    expect(carts.get('test_user')).toEqual(['cheesecake', 'cheesecake', 'cheesecake'])
+  });
+
+  test('adding unavailable items', async () => {
+    inventory.set('cheesecake', 2);
+    const response =  await request(app).post('/carts/test_user/items').send({
+      item: 'cheesecake',
+      quantity: 3
+    });
+    expect(response.status).toBe(400);
+  });
+});
+
 describe("addItem", () => {
 
   test("correct response", async () => {

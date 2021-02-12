@@ -7,9 +7,11 @@ const getItemsFromCart = username => {
   return carts.get(username)
 };
 
-const compliesToItemLimit = cart => { const unitsPerItem = cart.reduce((itemMap, itemName) => {
+const compliesToItemLimit = cart => {
+    const unitsPerItem = cart.reduce((itemMap, itemName) => {
     const quantity = (itemMap[itemName] || 0) + 1;
-    return { ...itemMap, [itemName]: quantity }; }, {});
+    return { ...itemMap, [itemName]: quantity };
+    }, {});
     return Object.values(unitsPerItem) .every(quantity => quantity < 3);
 };
 
