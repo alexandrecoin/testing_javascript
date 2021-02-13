@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
 
+const { users, hashPassword } = require('./authenticationController');
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -15,6 +17,20 @@ app.get('/carts/:username/items', (req, res) => {
   userCart
     ? res.status(200).json(userCart)
     : res.status(404).json({ err: 'Cart not found' });
+});
+
+app.put('/users/:username', (req, res) => {
+  const { username } = req.params;
+  const { email, password } = req.body;
+  const userAlreadyExists = users.has(username);
+
+  if (userAlreadyExists) {
+    return res.status(409).json({ message: `${username} already exists.` });
+  }
+
+  users.set(username, { email, passwordHash: hashPassword(password) });
+
+  res.status(201).json({ message: 'User created successfully' });
 });
 
 app.post('/carts/:username/items', (req, res) => {

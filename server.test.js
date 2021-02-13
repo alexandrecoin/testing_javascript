@@ -2,8 +2,10 @@ const { app } = require('./server');
 const { carts } = require('./cartController');
 const { inventory } = require('./inventoryController');
 const request = require('supertest');
+const { users, hashPassword } = require('./authenticationController');
 
 beforeEach(() => {
+  users.clear();
   carts.clear();
   inventory.set('cheesecake', 1);
 });
@@ -35,6 +37,34 @@ describe('#Server', () => {
       `/carts/test_user/items/cheesecake`
     );
     expect(addItemResponse.status).toEqual(404);
+  });
+});
+
+describe('create accounts', () => {
+  test('creating a new account', async () => {
+    const response = await request(app)
+      .put('/users/test_user')
+      .send({ email: 'test_user@test.fr', password: 'azerty123' })
+      .expect(201);
+
+    expect(response.body).toEqual({ message: 'User created successfully' });
+    expect(users.get('test_user')).toEqual({
+      email: 'test_user@test.fr',
+      passwordHash: hashPassword('azerty123'),
+    });
+  });
+
+  test('creating an already existing user', async () => {
+    users.set('test_user', {
+      email: 'test_user@test.fr',
+      passwordHash: hashPassword('azerty123')
+    })
+    const response = await request(app)
+    .put('/users/test_user')
+    .send({ email: 'test_user@test.fr'})
+    .expect(409)
+
+    expect(response.body).toEqual({ message: 'test_user already exists.'});
   });
 });
 
