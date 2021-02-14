@@ -30,11 +30,10 @@ const authenticationMiddleware = async (req, res, next) => {
       throw new Error('Invalid credentials');
     }
   } catch (e) {
-    res.error = { message: 'Please provide valid credentials'};
+    res.error = { message: 'Please provide valid credentials' };
     res.status = 401;
-    return res;
+    return res
   }
-
   await next();
 }
 

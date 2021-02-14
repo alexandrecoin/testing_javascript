@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 
-const { users, hashPassword } = require('./authenticationController');
+const { users, hashPassword, authenticationMiddleware } = require('./authenticationController');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -11,6 +11,13 @@ const {
   addItemToCart,
   deleteItemFromCart,
 } = require('./cartController');
+
+app.use(async (req, res, next) => {
+  if (req.url.startsWith("/carts")) {
+    return authenticationMiddleware(req, res, next);
+  }
+  await next();
+});
 
 app.get('/carts/:username/items', (req, res) => {
   const userCart = getItemsFromCart(req.params.username);
@@ -39,7 +46,7 @@ app.post('/carts/:username/items', (req, res) => {
 
   for (let i = 0; i < quantity; i++) {
     try {
-      const newItems = addItemToCart(username, item);
+      addItemToCart(username, item);
     } catch (err) {
       return res.status(400).json({ message: err.message });
     }
