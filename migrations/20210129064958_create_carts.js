@@ -1,4 +1,4 @@
-exports.up = async function(knex) {
+    exports.up = async function(knex) {
   await knex.schema.createTable('carts', table => {
      table.increments('id');
      table.string('username');

@@ -5,7 +5,7 @@
   "main": "Cart.js",
   "scripts": {
     "start": "node index.js",
-    "test:watch": "jest --watchAll"
+    "test:watch": "jest --runInBand --watchAll"
   },
   "repository": {
     "type": "git",
