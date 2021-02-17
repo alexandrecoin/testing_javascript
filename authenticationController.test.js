@@ -1,5 +1,13 @@
 const crypto = require('crypto');
-const { hashPassword, areCredentialsValid, authenticationMiddleware, users } = require('./authenticationController');
+const {
+  hashPassword,
+  areCredentialsValid,
+  authenticationMiddleware
+} = require('./authenticationController');
+
+const { db } = require('./dbConnection');
+
+beforeEach(() => db('users').truncate());
 
 // Unit testing
 describe('hashPassword', () => {
@@ -16,6 +24,13 @@ describe('hashPassword', () => {
 
 describe('authenticationMiddleware', () => {
   test('returns an error with invalid credentials', async () => {
+    await db('users')
+        .insert({
+          username: 'test_user',
+          email: 'test_user@test.fr',
+          passwordHash: hashPassword('azerty123'),
+        });
+
     const fakeAuth = Buffer.from('invalid:credentials').toString("base64");
 
     const req = {
@@ -38,10 +53,13 @@ describe('authenticationMiddleware', () => {
   });
 
   test('calls next with valid credentials', async () => {
-    users.set('test_user', {
-      email: 'test_user@test.fr',
-      passwordHash: hashPassword('azerty123')
-    });
+    await db('users')
+        .insert({
+          username: 'test_user',
+          email: 'test_user@test.fr',
+          passwordHash: hashPassword('azerty123'),
+        });
+
     const fakeAuth = Buffer.from('test_user:azerty123').toString("base64");
 
     const req = {
@@ -60,34 +78,35 @@ describe('authenticationMiddleware', () => {
 });
 
 // Integration testing
-
-beforeEach(() => users.clear());
-
 describe('areCredentialsValid', () => {
-  test('valid credentials', () => {
-    users.set('test_user', {
-      email: 'test_user@test.fr',
-      passwordHash: hashPassword('azerty123')
-    });
+  test('valid credentials', async () => {
+    await db('users')
+        .insert({
+          username: 'test_user',
+          email: 'test_user@test.fr',
+          passwordHash: hashPassword('azerty123'),
+        });
 
-    const hasValidCredentials = areCredentialsValid('test_user', 'azerty123');
+    const hasValidCredentials = await areCredentialsValid('test_user', 'azerty123');
 
     expect(hasValidCredentials).toBe(true);
   });
 
-  test('invalid credentials', () => {
-    users.set('test_user', {
-      email: 'test_user@test.fr',
-      passwordHash: hashPassword('azerty123')
-    });
+  test('invalid credentials', async () => {
+    await db('users')
+        .insert({
+          username: 'test_user',
+          email: 'test_user@test.fr',
+          passwordHash: hashPassword('azerty123'),
+        });
 
-    const hasValidCredentials = areCredentialsValid('test_user', 'qsdfgh456');
+    const hasValidCredentials = await areCredentialsValid('test_user', 'qsdfgh456');
 
     expect(hasValidCredentials).toBe(false);
   });
 
-  test('user does not exist', () => {
-    const result = areCredentialsValid('test_user', 'azerty123');
+  test('user does not exist', async () => {
+    const result = await areCredentialsValid('test_user', 'azerty123');
 
     expect(result).toBe(false);
   });
