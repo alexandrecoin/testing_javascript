@@ -1,51 +1,57 @@
-const {
-  addToInventory,
-  removeFromInventory,
-} = require('./inventoryController');
+const { removeFromInventory } = require('./inventoryController');
+const { db } = require('./dbConnection');
 const logger = require('./logger');
 
-const carts = new Map();
+const addItemToCart = async (username, item) => {
+  await removeFromInventory(item) ;
 
-const getItemsFromCart = (username) => {
-  return carts.get(username);
-};
+  const user = await db
+      .select()
+      .from('users')
+      .where({ username })
+      .first();
 
-const compliesToItemLimit = (cart) => {
-  const unitsPerItem = cart.reduce((itemMap, itemName) => {
-    const quantity = (itemMap[itemName] || 0) + 1;
-    return { ...itemMap, [itemName]: quantity };
-  }, {});
-  return Object.values(unitsPerItem).every((quantity) => quantity < 3);
-};
+  if (!user) {
+    const userNotFound = new Error('User not found');
+    userNotFound.code = 404;
+    throw userNotFound;
+  }
 
-const addItemToCart = (username, item) => {
-  removeFromInventory(item);
-  const newItems = (carts.get(username) || []).concat(item);
-  carts.set(username, newItems);
+  const itemEntry = await db
+      .select()
+      .from('carts_items')
+      .where({ userId: user.id, itemName: item })
+      .first();
+
+  if (itemEntry && itemEntry.quantity + 1 > 3) {
+    const limitError = new Error("Max 3 units of one particular item in your cart");
+    limitError.code = 400;
+    throw limitError;
+  }
+
+  if (itemEntry) {
+    await db('carts_items')
+        .increment('quantity')
+        .where({
+          userId: itemEntry.userId,
+          itemName: item
+        });
+  } else {
+    await db('cart_items')
+        .insert({
+          userId: user.id,
+          itemName: item,
+          quantity: 1
+        });
+  }
+
   logger.log(`${item} has been added to ${username} cart.`);
-  return newItems;
-};
-
-const deleteItemFromCart = (username, item) => {
-  if (!carts.has(username) || !carts.get(username).includes(item)) {
-    const err = new Error({ message: 'An error has occured' });
-    err.status = 404;
-    throw err;
-  }
-
-  let allItems = carts.get(username);
-  if (typeof allItems === 'string') {
-    allItems = [allItems];
-  }
-  const newItems = allItems.filter((i) => i !== item);
-  addToInventory(item, newItems.length);
-  carts.set(username, newItems);
+  return db
+      .select('itemName', 'quantity')
+      .from('carts_items')
+      .where({ userId: user.id });
 };
 
 module.exports = {
-  carts,
-  getItemsFromCart,
-  compliesToItemLimit,
   addItemToCart,
-  deleteItemFromCart,
 };

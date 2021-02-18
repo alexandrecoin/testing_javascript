@@ -1,114 +1,113 @@
-const {
-  carts,
-  getItemsFromCart,
-  compliesToItemLimit,
-  addItemToCart,
-  deleteItemFromCart,
-} = require('./cartController');
-const { inventory } = require('./inventoryController');
+const { addItemToCart } = require('./cartController');
+const { hashPassword } = require('./authenticationController');
+const { db, closeDatabaseConnection } = require('./dbConnection');
 const fs = require('fs');
 
-afterEach(() => {
-  carts.clear();
-  inventory.clear();
-});
-
-describe('Integration', () => {
-  describe('addItemToCart', () => {
-    beforeEach(() => {
-      fs.writeFileSync('/tmp/logs.out', '');
-    });
-
-    test('adding unavailable items to the cart', () => {
-      inventory.set('cheesecake', 0);
-      carts.set('test_user', []);
-
-      try {
-        addItemToCart('test_user', 'cheesecake');
-      } catch (err) {
-        const expectedError = new Error('cheesecake is unavailable.');
-        expectedError.code = 404;
-
-        expect(expectedError).toEqual(err);
-      }
-
-      expect(carts.get('test_user')).toEqual([]);
-      expect.assertions(2);
-    });
-
-    test('adding available items to the cart', () => {
-      inventory.set('cheesecake', 1);
-      carts.set('test_user', []);
-
-      addItemToCart('test_user', 'cheesecake');
-      expect(carts.get('test_user')).toEqual(['cheesecake']);
-      expect(inventory.get('cheesecake')).toEqual(0);
-    });
-
-    test('logging added items', () => {
-      inventory.set('cheesecake', 1);
-      carts.set('test_user', []);
-      addItemToCart('test_user', 'cheesecake');
-
-      const logs = fs.readFileSync('/tmp/logs.out', 'utf-8');
-      expect(logs).toContain('cheesecake has been added to test_user cart.\n');
-    });
+describe('addItemToCart', () => {
+  beforeEach(() => {
+    fs.writeFileSync('/tmp/logs.out', '');
   });
 
-  describe('deleteItemFromCart', () => {
-    test('removing item from cart when no item', () => {
-      carts.set('test_user', []);
-      try {
-        deleteItemFromCart('test_user', 'cheesecake');
-      } catch (err) {
-        const expectedError = new Error({ message: 'An error has occured' });
-        expectedError.status = 404;
+  beforeEach(() => db('users').truncate());
+  beforeEach(() => db('carts_items').truncate());
+  beforeEach(() => db('inventory').truncate());
 
-        expect(expectedError).toEqual(err);
-      }
+  afterAll(() => closeDatabaseConnection())
 
-      expect(carts.get('test_user')).toEqual([]);
-    });
+  test('adding unavailable items to the cart', async () => {
 
-    test('removing item from cart when item is available', () => {
-      carts.set('test_user', 'cheesecake');
-      inventory.set('cheesecake', 0);
-      deleteItemFromCart('test_user', 'cheesecake');
-      expect(carts.get('test_user')).toEqual([]);
-    });
+    await db('users')
+        .insert({
+          username: "test_user",
+          email: "test_user@example.org",
+          passwordHash: hashPassword("azerty123")
+        });
+
+    await db('inventory').insert({itemName: 'cheesecake', quantity: 0});
+
+    try {
+      await addItemToCart('test_user', 'cheesecake');
+    } catch (err) {
+      const expectedError = new Error('cheesecake is unavailable');
+      expectedError.code = 404;
+
+      expect(expectedError).toEqual(err);
+    }
+
+    const finalCartContent = await db
+        .select('carts_items.*')
+        .from('carts_items')
+        .join("users", "users.id", "carts_items.userId")
+        .where("users.username", "test_user");
+
+    expect(finalCartContent).toEqual([]);
+    expect.assertions(2);
   });
 
-  describe('getItemsFromCart', () => {
-    test('Retrieving items from cart', () => {
-      carts.set('test_user', 'cheesecake');
-      const result = getItemsFromCart('test_user');
-      expect(result).toEqual('cheesecake');
+  test('adding item above limit in the cart', async () => {
+    await db('users').insert({
+      username: "test_user",
+      email: "test_user@example.org",
+      passwordHash: hashPassword("azerty123")
     });
 
-    test('Retrieving items from empty cart', () => {
-      carts.set('test_user', []);
-      const result = getItemsFromCart('test_user');
-      expect(result).toEqual([]);
+    const {id: userId} = await db
+        .select()
+        .from('users')
+        .where({username: 'test_user'})
+        .first();
+
+    await db('inventory').insert({itemName: 'cheesecake', quantity: 1});
+
+    await db('carts_items').insert({
+      userId,
+      itemName: 'cheesecake',
+      quantity: 3
     });
+
+    try {
+      await addItemToCart('test_user', 'cheesecake');
+    } catch (e) {
+      const expectedError = new Error('Max 3 units of one particular item in your cart');
+      expectedError.code = 400;
+
+      expect(e).toEqual(expectedError);
+    }
+
+    const finalCartContent = await db
+        .select('carts_items.itemName', 'carts_items.quantity')
+        .from('carts_items')
+        .join("users", "users.id", "carts_items.userId")
+        .where("users.username", "test_user");
+
+    expect(finalCartContent).toEqual([{itemName: 'cheesecake', quantity: 3}]);
+    expect.assertions(2);
   });
-});
 
-describe('Unit', () => {
-  describe('compliesToItemList', () => {
-    test('returns true for carts with no more than 3 items of a kind', () => {
-      const cart = ['cheesecake', 'cheesecake', 'almond pie', 'brownie'];
-
-      const result = compliesToItemLimit(cart);
-
-      expect(result).toBe(true);
+  test("logging added items", async () => {
+    await db("users").insert({
+      username: "test_user",
+      email: "test_user@example.org",
+      passwordHash: hashPassword("a_password")
     });
 
-    test('returns false for carts with 3 or more items of a kind', () => {
-      const cart = ['cheesecake', 'cheesecake', 'almond pie', 'cheesecake'];
+    const {id: userId} = await db
+        .select()
+        .from("users")
+        .where({username: "test_user"})
+        .first();
 
-      const result = compliesToItemLimit(cart);
-
-      expect(result).toBe(false);
+    await db("inventory").insert({itemName: "cheesecake", quantity: 1});
+    await db("carts_items").insert({
+      userId,
+      itemName: "cheesecake",
+      quantity: 1
     });
+
+    await addItemToCart("test_user", "cheesecake");
+
+    const logs = fs.readFileSync("/tmp/logs.out", "utf-8");
+    expect(logs).toContain("cheesecake has been added to test_user cart");
+
   });
 });
