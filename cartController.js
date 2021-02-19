@@ -37,7 +37,7 @@ const addItemToCart = async (username, item) => {
           itemName: item
         });
   } else {
-    await db('cart_items')
+    await db('carts_items')
         .insert({
           userId: user.id,
           itemName: item,
