@@ -5,10 +5,6 @@ const { hashPassword } = require("./authenticationController.js");
 
 afterAll(() => closeDatabaseConnection());
 
-beforeEach(() => db("users").truncate());
-beforeEach(() => db("carts_items").truncate());
-beforeEach(() => db("inventory").truncate());
-
 const username = "test_user";
 const password = "a_password";
 const validAuth = Buffer.from(`${username}:${password}`).toString("base64");

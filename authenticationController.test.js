@@ -7,8 +7,6 @@ const {
 
 const { db } = require('./dbConnection');
 
-beforeEach(() => db('users').truncate());
-
 // Unit testing
 describe('hashPassword', () => {
   test('hashing password', () => {

@@ -8,10 +8,6 @@ describe('addItemToCart', () => {
     fs.writeFileSync('/tmp/logs.out', '');
   });
 
-  beforeEach(() => db('users').truncate());
-  beforeEach(() => db('carts_items').truncate());
-  beforeEach(() => db('inventory').truncate());
-
   afterAll(() => closeDatabaseConnection())
 
   test('adding unavailable items to the cart', async () => {
