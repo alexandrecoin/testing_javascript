@@ -3,9 +3,15 @@ const request = require("supertest");
 const { app } = require("./server.js");
 const { hashPassword } = require("./authenticationController.js");
 const { user } = require('./userTestUtils');
-const axios = require('axios')
+const nock = require('nock');
 
-jest.mock('axios');
+beforeEach(() => nock.cleanAll());
+
+afterEach(() => {
+  if (!nock.isDone()) {
+    nock.cleanAll();
+    throw new Error("Not all mocked endpoints received requests."); }
+});
 
 describe('fetch inventory item', () => {
   const eggs = { itemName: 'eggs', quantity: 3};
@@ -27,17 +33,15 @@ describe('fetch inventory item', () => {
       results: [{ name: "Omelette du Fromage" }]
     };
 
-    axios.get.mockResolvedValue({
-      json: jest.fn().mockResolvedValue(fakeApiResponse)
-    });
+    nock("http://recipepuppy.com")
+        .get("/api")
+        .query({ i: "eggs" })
+        .reply(200, fakeApiResponse);
 
     const result = await request(app)
         .get('/inventory/eggs')
         .expect(200)
         .expect("Content-Type", /json/);
-
-    expect(axios.get.mock.calls).toHaveLength(1);
-    expect(axios.get.mock.calls[0]).toEqual(['http://recipepuppy.com/api?i=eggs'])
 
     expect(result.body).toEqual({
       ...eggs,

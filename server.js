@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const { db } = require('./dbConnection');
-const axios = require('axios');
+const fetch = require('isomorphic-fetch');
 
 const { hashPassword, authenticationMiddleware } = require('./authenticationController');
 
@@ -19,7 +19,7 @@ app.use(async (req, res, next) => {
 
 app.get('/inventory/:itemName', async (req ,res) => {
   const { itemName } = req.params;
-  const response = await axios.get(`http://recipepuppy.com/api?i=${itemName}`);
+  const response = await fetch(`http://recipepuppy.com/api?i=${itemName}`);
 
   const { title, href, results: recipes } = await response.json();
 
@@ -28,6 +28,7 @@ app.get('/inventory/:itemName', async (req ,res) => {
       .from('inventory')
       .where({ itemName })
       .first();
+
   res.status(200).json({
     ...inventoryItem,
     info: `Data obtained from ${title} - ${href}`,
