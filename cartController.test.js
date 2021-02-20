@@ -2,6 +2,7 @@ const { addItemToCart } = require('./cartController');
 const { hashPassword } = require('./authenticationController');
 const { db, closeDatabaseConnection } = require('./dbConnection');
 const fs = require('fs');
+const { user } = require('./userTestUtils');
 
 describe('addItemToCart', () => {
   beforeEach(() => {
@@ -12,17 +13,10 @@ describe('addItemToCart', () => {
 
   test('adding unavailable items to the cart', async () => {
 
-    await db('users')
-        .insert({
-          username: "test_user",
-          email: "test_user@example.org",
-          passwordHash: hashPassword("azerty123")
-        });
-
     await db('inventory').insert({itemName: 'cheesecake', quantity: 0});
 
     try {
-      await addItemToCart('test_user', 'cheesecake');
+      await addItemToCart(user.username, 'cheesecake');
     } catch (err) {
       const expectedError = new Error('cheesecake is unavailable');
       expectedError.code = 404;
@@ -34,35 +28,24 @@ describe('addItemToCart', () => {
         .select('carts_items.*')
         .from('carts_items')
         .join("users", "users.id", "carts_items.userId")
-        .where("users.username", "test_user");
+        .where("users.username", user.username);
 
     expect(finalCartContent).toEqual([]);
     expect.assertions(2);
   });
 
   test('adding item above limit in the cart', async () => {
-    await db('users').insert({
-      username: "test_user",
-      email: "test_user@example.org",
-      passwordHash: hashPassword("azerty123")
-    });
-
-    const {id: userId} = await db
-        .select()
-        .from('users')
-        .where({username: 'test_user'})
-        .first();
 
     await db('inventory').insert({itemName: 'cheesecake', quantity: 1});
 
     await db('carts_items').insert({
-      userId,
+      userId: user.id,
       itemName: 'cheesecake',
       quantity: 3
     });
 
     try {
-      await addItemToCart('test_user', 'cheesecake');
+      await addItemToCart(user.username, 'cheesecake');
     } catch (e) {
       const expectedError = new Error('Max 3 units of one particular item in your cart');
       expectedError.code = 400;
@@ -74,33 +57,22 @@ describe('addItemToCart', () => {
         .select('carts_items.itemName', 'carts_items.quantity')
         .from('carts_items')
         .join("users", "users.id", "carts_items.userId")
-        .where("users.username", "test_user");
+        .where("users.username", user.username);
 
     expect(finalCartContent).toEqual([{itemName: 'cheesecake', quantity: 3}]);
     expect.assertions(2);
   });
 
   test("logging added items", async () => {
-    await db("users").insert({
-      username: "test_user",
-      email: "test_user@example.org",
-      passwordHash: hashPassword("a_password")
-    });
-
-    const {id: userId} = await db
-        .select()
-        .from("users")
-        .where({username: "test_user"})
-        .first();
 
     await db("inventory").insert({itemName: "cheesecake", quantity: 1});
     await db("carts_items").insert({
-      userId,
+      userId: user.id,
       itemName: "cheesecake",
       quantity: 1
     });
 
-    await addItemToCart("test_user", "cheesecake");
+    await addItemToCart(user.username, "cheesecake");
 
     const logs = fs.readFileSync("/tmp/logs.out", "utf-8");
     expect(logs).toContain("cheesecake has been added to test_user cart");

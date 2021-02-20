@@ -2,29 +2,17 @@ const { db, closeDatabaseConnection } = require("./dbConnection");
 const request = require("supertest");
 const { app } = require("./server.js");
 const { hashPassword } = require("./authenticationController.js");
+const { user } = require('./userTestUtils');
 
 afterAll(() => closeDatabaseConnection());
 
-const username = "test_user";
-const password = "a_password";
-const validAuth = Buffer.from(`${username}:${password}`).toString("base64");
-const authHeader = `Basic ${validAuth}`;
-const createUser = async () => {
-  await db("users").insert({
-    username,
-    email: "test_user@example.org",
-    passwordHash: hashPassword(password)
-  });
-};
-
 describe("add items to a cart", () => {
-  beforeEach(() => createUser());
 
   test("adding available items", async () => {
     await db("inventory").insert({ itemName: "cheesecake", quantity: 3 });
     const response = await request(app)
         .post("/carts/test_user/items")
-        .set("authorization", authHeader)
+        .set("authorization", user.authHeader)
         .send({ item: "cheesecake", quantity: 3 })
         .expect(200)
         .expect("Content-Type", /json/);
@@ -42,14 +30,15 @@ describe("add items to a cart", () => {
         .select("carts_items.itemName", "carts_items.quantity")
         .from("carts_items")
         .join("users", "users.id", "carts_items.userId")
-        .where("users.username", "test_user");
+        .where("users.username", user.username);
 
     expect(finalCartContent).toEqual(newItems);
   });
+
   test("adding unavailable items", async () => {
     const response = await request(app)
         .post("/carts/test_user/items")
-        .set("authorization", authHeader)
+        .set("authorization", user.authHeader)
         .send({ item: "cheesecake", quantity: 1 })
         .expect(400)
         .expect("Content-Type", /json/);
@@ -62,35 +51,23 @@ describe("add items to a cart", () => {
         .select("carts_items.itemName", "carts_items.quantity")
         .from("carts_items")
         .join("users", "users.id", "carts_items.userId")
-        .where("users.username", "test_user");
+        .where("users.username", user.username);
     expect(finalCartContent).toEqual([]);
   });
 });
 
 describe("removing items from a cart", () => {
 
-  let userId;
-
-  beforeEach(async () => {
-    await createUser();
-    const user = await db
-        .select()
-        .from('users')
-        .where({ username: 'test_user'})
-        .first()
-    userId = user.id;
-  });
-
   test("removing existing items", async () => {
     await db("carts_items").insert({
-      userId,
+      userId: user.id,
       itemName: "cheesecake",
       quantity: 1
     });
 
     const response = await request(app)
         .del("/carts/test_user/items/cheesecake")
-        .set("authorization", authHeader)
+        .set("authorization", user.authHeader)
         .expect(200)
         .expect("Content-Type", /json/);
 
@@ -102,7 +79,7 @@ describe("removing items from a cart", () => {
         .select("carts_items.itemName", "carts_items.quantity")
         .from("carts_items")
         .join("users", "users.id", "carts_items.userId")
-        .where("users.username", "test_user");
+        .where("users.username", user.username);
     expect(finalCartContent).toEqual(expectedFinalContent);
 
     const { quantity: inventoryCheesecakes } = await db
@@ -121,7 +98,7 @@ describe("removing items from a cart", () => {
 
     const response = await request(app)
         .del("/carts/test_user/items/cheesecake")
-        .set("authorization", authHeader)
+        .set("authorization", user.authHeader)
         .expect(400)
         .expect("Content-Type", /json/);
 
@@ -141,30 +118,28 @@ describe("removing items from a cart", () => {
 describe("create accounts", () => {
   test("creating a new account", async () => {
     const response = await request(app)
-        .put("/users/test_user")
-        .send({ email: "test_user@example.org", password: "a_password" })
-        .send({ email: "test_user@example.org", password: "a_password" })
+        .put("/users/test_user_second")
+        .send({ email: "test_user@test.fr", password: "a_password" })
         .expect(201)
         .expect("Content-Type", /json/);
 
     expect(response.body).toEqual({
-      message: "test_user created successfully"
+      message: "test_user_second created successfully"
     });
 
     const savedUser = await db
         .select("email", "passwordHash")
         .from("users")
-        .where({ username: "test_user" })
+        .where({ username: "test_user_second" })
         .first();
 
     expect(savedUser).toEqual({
-      email: "test_user@example.org",
+      email: "test_user@test.fr",
       passwordHash: hashPassword("a_password")
     });
   });
 
   test("creating a duplicate account", async () => {
-    await createUser();
 
     const response = await request(app)
         .put("/users/test_user")
