@@ -3,6 +3,9 @@ const request = require("supertest");
 const { app } = require("./server.js");
 const { hashPassword } = require("./authenticationController.js");
 const { user } = require('./userTestUtils');
+const axios = require('axios')
+
+jest.mock('axios');
 
 describe('fetch inventory item', () => {
   const eggs = { itemName: 'eggs', quantity: 3};
@@ -18,11 +21,29 @@ describe('fetch inventory item', () => {
   });
 
   test('can fetch an item from the inventory', async () => {
+    const fakeApiResponse = {
+      title: "FakeAPI",
+      href: "example.org",
+      results: [{ name: "Omelette du Fromage" }]
+    };
+
+    axios.get.mockResolvedValue({
+      json: jest.fn().mockResolvedValue(fakeApiResponse)
+    });
+
     const result = await request(app)
         .get('/inventory/eggs')
         .expect(200)
+        .expect("Content-Type", /json/);
 
-    expect(result.body).toEqual(eggs);
+    expect(axios.get.mock.calls).toHaveLength(1);
+    expect(axios.get.mock.calls[0]).toEqual(['http://recipepuppy.com/api?i=eggs'])
+
+    expect(result.body).toEqual({
+      ...eggs,
+      info: `Data obtained from ${fakeApiResponse.title} - ${fakeApiResponse.href}`,
+      recipes: fakeApiResponse.results
+    });
   });
 });
 
