@@ -4,6 +4,28 @@ const { app } = require("./server.js");
 const { hashPassword } = require("./authenticationController.js");
 const { user } = require('./userTestUtils');
 
+describe('fetch inventory item', () => {
+  const eggs = { itemName: 'eggs', quantity: 3};
+  const applePie = { itemName: 'apple pie', quantity: 1};
+
+  beforeEach(async() => {
+    await db("inventory").insert([eggs, applePie]);
+    const { id: eggsId } = await db
+        .select()
+        .from("inventory")
+        .where({ itemName: "eggs" }) .first();
+    eggs.id = eggsId;
+  });
+
+  test('can fetch an item from the inventory', async () => {
+    const result = await request(app)
+        .get('/inventory/eggs')
+        .expect(200)
+
+    expect(result.body).toEqual(eggs);
+  });
+});
+
 describe("add items to a cart", () => {
 
   test("adding available items", async () => {

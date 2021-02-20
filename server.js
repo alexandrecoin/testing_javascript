@@ -16,6 +16,16 @@ app.use(async (req, res, next) => {
   await next();
 });
 
+app.get('/inventory/:itemName', async (req ,res) => {
+  const { itemName } = req.params;
+  const body = await db
+      .select()
+      .from('inventory')
+      .where({ itemName })
+      .first();
+  res.status(200).json(body);
+});
+
 app.put('/users/:username', async (req, res) => {
   const { username } = req.params;
   const { email, password } = req.body;
