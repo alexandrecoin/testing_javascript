@@ -1,6 +1,5 @@
 const { addItemToCart } = require('./cartController');
-const { hashPassword } = require('./authenticationController');
-const { db, closeDatabaseConnection } = require('./dbConnection');
+const { db } = require('./dbConnection');
 const fs = require('fs');
 const { user } = require('./userTestUtils');
 
@@ -8,8 +7,6 @@ describe('addItemToCart', () => {
   beforeEach(() => {
     fs.writeFileSync('/tmp/logs.out', '');
   });
-
-  afterAll(() => closeDatabaseConnection())
 
   test('adding unavailable items to the cart', async () => {
 

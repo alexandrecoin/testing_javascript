@@ -1,10 +1,8 @@
-const { db, closeDatabaseConnection } = require("./dbConnection");
+const { db } = require("./dbConnection");
 const request = require("supertest");
 const { app } = require("./server.js");
 const { hashPassword } = require("./authenticationController.js");
 const { user } = require('./userTestUtils');
-
-afterAll(() => closeDatabaseConnection());
 
 describe("add items to a cart", () => {
 
