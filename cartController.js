@@ -54,7 +54,7 @@ const addItemToCart = async (username, item) => {
       .where({ userId: user.id });
 };
 
-const hoursInMs = hours => 1000 * 60 * 60 * n;
+const hoursInMs = hours => 1000 * 60 * 60 * hours;
 
 const removeStaleItems = async () => {
     const FOUR_HOURS_AGO = new Date(

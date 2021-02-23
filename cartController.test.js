@@ -2,6 +2,7 @@ const { addItemToCart, monitorStaleItems } = require('./cartController');
 const { db } = require('./dbConnection');
 const fs = require('fs');
 const { user } = require('./userTestUtils');
+const FakeTimers = require("@sinonjs/fake-timers");
 
 describe('addItemToCart', () => {
   beforeEach(() => {
@@ -77,43 +78,68 @@ describe('addItemToCart', () => {
   });
 });
 
-describe('monitorStaleItems',() =>{
-  const waitMs = ms => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  };
+const withRetries = async fn => {
+  // Capture the assertion error since Jest does not export it
+  const JestAssertionError = (() => {
+    try {
+      expect(false).toBe(true);
+    } catch (e) {
+      return e.constructor;
+    }
+  })();
 
+  try {
+    await fn();
+  } catch (e) {
+    if (e.constructor === JestAssertionError) {
+      // Wait 100ms before retrying
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await withRetries(fn);
+    } else {
+      throw e;
+    }
+  }
+};
+
+describe("timers", () => {
   const hoursInMs = n => 1000 * 60 * 60 * n;
 
-  let timer;
+  let clock;
+  beforeEach(() => {
+    clock = FakeTimers.install({ toFake: ["Date", "setInterval"] });
+  });
 
   afterEach(() => {
-    if (timer) clearTimeout(timer);
+    clock = clock.uninstall();
   });
 
   test("removing stale items", async () => {
-      await db("inventory").insert({
-      itemName: "cheesecake",
-      quantity: 1
+
+    await db("inventory").insert({ itemName: "cheesecake", quantity: 1 });
+    await addItemToCart(user.username, "cheesecake");
+
+    clock.tick(hoursInMs(4));
+    timer = monitorStaleItems();
+    clock.tick(hoursInMs(2));
+
+    await withRetries(async () => {
+      const finalCartContent = await db
+          .select()
+          .from("carts_items")
+          .join("users", "users.id", "carts_items.userId")
+          .where("users.username", user.username);
+
+      expect(finalCartContent).toEqual([]);
     });
 
-    await addItemToCart(user.username, "cheesecake");
-    await waitMs(hoursInMs(4));
-    timer = monitorStaleItems();
-    await waitMs(hoursInMs(2));
+    await withRetries(async () => {
+      const inventoryContent = await db
+          .select("itemName", "quantity")
+          .from("inventory");
 
-    const finalCartContent = await db
-        .select()
-        .from("carts_items")
-        .join("users", "users.id", "carts_items.userId")
-        .where("users.username", user.username);
-
-    expect(finalCartContent).toEqual([]);
-
-    const inventoryContent = await db .select("itemName", "quantity")
-        .from("inventory");
-
-    expect(inventoryContent).toEqual([
-      { itemName: "cheesecake", quantity: 1 }
-    ]);
+      expect(inventoryContent).toEqual([
+        { itemName: "cheesecake", quantity: 1 }
+      ]);
+    });
   });
 });
