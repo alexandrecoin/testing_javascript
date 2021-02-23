@@ -1,4 +1,4 @@
-const { addItemToCart } = require('./cartController');
+const { addItemToCart, monitorStaleItems } = require('./cartController');
 const { db } = require('./dbConnection');
 const fs = require('fs');
 const { user } = require('./userTestUtils');
@@ -74,5 +74,46 @@ describe('addItemToCart', () => {
     const logs = fs.readFileSync("/tmp/logs.out", "utf-8");
     expect(logs).toContain("cheesecake has been added to test_user cart");
 
+  });
+});
+
+describe('monitorStaleItems',() =>{
+  const waitMs = ms => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  };
+
+  const hoursInMs = n => 1000 * 60 * 60 * n;
+
+  let timer;
+
+  afterEach(() => {
+    if (timer) clearTimeout(timer);
+  });
+
+  test("removing stale items", async () => {
+      await db("inventory").insert({
+      itemName: "cheesecake",
+      quantity: 1
+    });
+
+    await addItemToCart(user.username, "cheesecake");
+    await waitMs(hoursInMs(4));
+    timer = monitorStaleItems();
+    await waitMs(hoursInMs(2));
+
+    const finalCartContent = await db
+        .select()
+        .from("carts_items")
+        .join("users", "users.id", "carts_items.userId")
+        .where("users.username", user.username);
+
+    expect(finalCartContent).toEqual([]);
+
+    const inventoryContent = await db .select("itemName", "quantity")
+        .from("inventory");
+
+    expect(inventoryContent).toEqual([
+      { itemName: "cheesecake", quantity: 1 }
+    ]);
   });
 });

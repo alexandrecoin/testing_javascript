@@ -32,6 +32,7 @@ const addItemToCart = async (username, item) => {
   if (itemEntry) {
     await db('carts_items')
         .increment('quantity')
+        .update({ updatedAt: new Date().toISOString() })
         .where({
           userId: itemEntry.userId,
           itemName: item
@@ -41,7 +42,8 @@ const addItemToCart = async (username, item) => {
         .insert({
           userId: user.id,
           itemName: item,
-          quantity: 1
+          quantity: 1,
+            updatedAt: new Date().toISOString()
         });
   }
 
@@ -52,6 +54,43 @@ const addItemToCart = async (username, item) => {
       .where({ userId: user.id });
 };
 
+const hoursInMs = hours => 1000 * 60 * 60 * n;
+
+const removeStaleItems = async () => {
+    const FOUR_HOURS_AGO = new Date(
+        Date.now() - hoursInMs(4)
+    ).toISOString();
+
+    const staleItems = await db
+        .select()
+        .from('carts_items')
+        .where("updatedAt", "<", FOUR_HOURS_AGO );
+
+    if (staleItems.length === 0) return null;
+
+    const inventoryUpdates = staleItems.map(staleItem => {
+        db('inventory')
+            .increment("quantity", staleItem.quantity)
+            .where({ itemName: staleItem.itemName });
+    });
+
+    await Promise.all(inventoryUpdates);
+
+    const staleItemsTuples = staleItems.map( staleItem => [staleItem.itemName, staleItem.userId]);
+
+    await db('carts_items')
+        .del()
+        .whereIn(["itemName", "userId"], staleItemsTuples)
+}
+
+const monitorStaleItems = () => setInterval(
+    removeStaleItems,
+    hoursInMs(2)
+);
+
+
+
 module.exports = {
   addItemToCart,
+  monitorStaleItems
 };
