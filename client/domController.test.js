@@ -15,8 +15,8 @@ describe('updateItemList', () => {
         const itemList = document.getElementById('item-list');
         expect(itemList.childNodes).toHaveLength(2);
 
-        expect(getByText(itemList, "cheesecake - Quantity: 5", { selector: "li" })).toBeTruthy();
-        expect(getByText(itemList, "apple pie - Quantity: 3")).toBeTruthy();
+        expect(getByText(itemList, "cheesecake - Quantity: 5", { selector: "li" })).toBeInTheDocument();
+        expect(getByText(itemList, "apple pie - Quantity: 3")).toBeInTheDocument();
     });
 
 
@@ -30,5 +30,17 @@ describe('updateItemList', () => {
 
         expect( screen.getByText(
             `The inventory has been updated - ${JSON.stringify(inventory)}` )
-        ).toBeTruthy(); });
+        ).toBeTruthy();
+    });
+
+    test('it highlights in red items whose quantity is less than 5', () => {
+        const inventory = {
+            cheesecake: 5,
+            "apple pie": 2
+        };
+
+        updateItemList(inventory);
+
+        expect(screen.getByText("apple pie - Quantity: 2")).toHaveStyle({color: 'red'})
+    });
 });

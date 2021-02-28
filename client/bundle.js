@@ -6,14 +6,16 @@ const updateItemList = inventory =>  {
     Object.entries(inventory).forEach(([itemName, quantity]) => {
         const listItem = window.document.createElement('li');
         listItem.innerHTML = `${itemName} - Quantity: ${quantity}`;
-        inventoryList.appendChild(listItem);
 
+        quantity < 5 ? listItem.style.color = 'red' : null
+
+        inventoryList.appendChild(listItem);
     });
 
     const inventoryContents = JSON.stringify(inventory);
-    const paragraph = document.createElement('p');
+    const paragraph = window.document.createElement('p');
     paragraph.innerHTML = `The inventory has been updated - ${inventoryContents}`;
-    document.body.appendChild(paragraph);
+    window.document.body.appendChild(paragraph);
 }
 
 module.exports = { updateItemList };
