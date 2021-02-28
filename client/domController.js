@@ -6,6 +6,7 @@ const updateItemList = inventory =>  {
         const listItem = window.document.createElement('li');
         listItem.innerHTML = `${itemName} - Quantity: ${quantity}`;
 
+        quantity === 0 ? listItem.style.visibility = 'hidden' : null
         quantity < 5 ? listItem.className = "almost-soldout" : null
 
         inventoryList.appendChild(listItem);

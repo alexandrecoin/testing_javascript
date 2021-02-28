@@ -43,4 +43,18 @@ describe('updateItemList', () => {
 
         expect(screen.getByText("apple pie - Quantity: 2")).toHaveStyle({color: 'red'})
     });
+
+    test('it hides items whose stock is equal to 0', () => {
+        const inventory = {
+            cheesecake: 5,
+            "apple pie": 0
+        };
+
+        updateItemList(inventory);
+
+        expect(screen.getByText("apple pie - Quantity: 0")).toBeInTheDocument();
+        expect(screen.getByText("apple pie - Quantity: 0")).toHaveStyle({
+            visibility: 'hidden'
+        });
+    });
 });
