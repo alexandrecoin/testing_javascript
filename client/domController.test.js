@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { updateItemList } = require('./domController');
+const { updateItemList, emptyList } = require('./domController');
 const initialHtml = fs.readFileSync("./index.html");
 const { screen, getByText } = require('@testing-library/dom')
 
@@ -56,5 +56,15 @@ describe('updateItemList', () => {
         expect(screen.getByText("apple pie - Quantity: 0")).toHaveStyle({
             visibility: 'hidden'
         });
+    });
+
+    test('it renders a button to empty item list', () => {
+       expect(screen.getByText('Remove items')).toBeInTheDocument();
+    });
+
+    test('button is disabled if items list is empty', () => {
+        const inventory = {};
+        updateItemList(inventory);
+        expect(screen.getByText('Remove items')).toBeDisabled();
     });
 });

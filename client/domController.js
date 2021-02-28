@@ -1,6 +1,10 @@
 const updateItemList = inventory =>  {
     const inventoryList = window.document.getElementById('item-list');
+    const removeItemsButton = window.document.getElementById('remove-button')
     inventoryList.innerHTML = '';
+
+    const isEmpty = isInventoryEmpty(inventory);
+    isEmpty ? removeItemsButton.disabled = true : null
 
     Object.entries(inventory).forEach(([itemName, quantity]) => {
         const listItem = window.document.createElement('li');
@@ -17,5 +21,9 @@ const updateItemList = inventory =>  {
     paragraph.innerHTML = `The inventory has been updated - ${inventoryContents}`;
     window.document.body.appendChild(paragraph);
 }
+
+const isInventoryEmpty = inventory => {
+    if (Object.keys(inventory).length === 0 && inventory.constructor === Object) return true;
+};
 
 module.exports = { updateItemList };
