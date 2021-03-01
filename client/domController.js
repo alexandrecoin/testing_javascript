@@ -1,5 +1,22 @@
 const { addItem, data } = require('./inventoryController');
 
+const validItems = ['cheesecake', 'apple pie', 'carrot cake'];
+const handleItemName = event => {
+    const itemName = event.target.value;
+
+    const errorMsg = window.document.getElementById('error-msg');
+
+    if (itemName === '') {
+        errorMsg.innerHTML = '';
+    }
+    else if (!validItems.includes(itemName)) {
+        errorMsg.innerHTML = `${itemName} is not a valid item.`;
+    }
+    else {
+        errorMsg.innerHTML =  `${itemName} is a valid item.`
+    }
+}
+
 const updateItemList = inventory =>  {
     const inventoryList = window.document.getElementById('item-list');
     const removeItemsButton = window.document.getElementById('remove-button')
@@ -37,4 +54,8 @@ const handleAddItem = event => {
     updateItemList(data.inventory);
 };
 
-module.exports = { updateItemList, handleAddItem };
+module.exports = {
+    updateItemList,
+    handleAddItem,
+    handleItemName
+};

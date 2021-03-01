@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { updateItemList, handleAddItem } = require('./domController');
+const { updateItemList, handleAddItem, handleItemName } = require('./domController');
 const initialHtml = fs.readFileSync("./index.html");
 const { screen, getByText } = require('@testing-library/dom')
 
@@ -88,4 +88,20 @@ describe('handleAddItem', () => {
       const itemList = document.getElementById('item-list');
       expect(getByText(itemList, "cheesecake - Quantity 4")).toBeInTheDocument();
    });
+});
+
+describe('handleItemName', () => {
+    test('check if item is valid', () => {
+        const event = {
+            preventDefault: jest.fn(),
+            target: {
+                value: "cheesecake"
+            }
+        };
+
+        handleItemName(event);
+
+        const result = document.getElementById('error-msg');
+        expect(getByText(result, "cheesecake is a valid item")).toBeInTheDocument();
+    });
 });
