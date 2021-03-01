@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { updateItemList, emptyList } = require('./domController');
+const { updateItemList, handleAddItem } = require('./domController');
 const initialHtml = fs.readFileSync("./index.html");
 const { screen, getByText } = require('@testing-library/dom')
 
@@ -18,7 +18,6 @@ describe('updateItemList', () => {
         expect(getByText(itemList, "cheesecake - Quantity: 5", { selector: "li" })).toBeInTheDocument();
         expect(getByText(itemList, "apple pie - Quantity: 3")).toBeInTheDocument();
     });
-
 
     test("adding a paragraph indicating what was the update", () => {
         const inventory = {
@@ -67,4 +66,26 @@ describe('updateItemList', () => {
         updateItemList(inventory);
         expect(screen.getByText('Remove items')).toBeDisabled();
     });
+});
+
+// Unreliable test because it only tests the handleAddItem function
+describe('handleAddItem', () => {
+   test('adding items to the page', () => {
+      const event = {
+          preventDefault: jest.fn(),
+          target: {
+              elements: {
+                  name: { value: 'cheesecake' },
+                  quantity: { value: 4 }
+              },
+          },
+      };
+
+      handleAddItem(event);
+
+      expect(event.preventDefault.mock.calls).toHaveLength(1);
+
+      const itemList = document.getElementById('item-list');
+      expect(getByText(itemList, "cheesecake - Quantity 4")).toBeInTheDocument();
+   });
 });

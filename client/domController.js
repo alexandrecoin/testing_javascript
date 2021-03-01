@@ -1,3 +1,5 @@
+const { addItem, data } = require('./inventoryController');
+
 const updateItemList = inventory =>  {
     const inventoryList = window.document.getElementById('item-list');
     const removeItemsButton = window.document.getElementById('remove-button')
@@ -26,4 +28,13 @@ const isInventoryEmpty = inventory => {
     if (Object.keys(inventory).length === 0 && inventory.constructor === Object) return true;
 };
 
-module.exports = { updateItemList };
+const handleAddItem = event => {
+    event.preventDefault();
+
+    const { name, quantity } = event.target.elements;
+    addItem(name.value, parseInt(quantity.value, 10));
+
+    updateItemList(data.inventory);
+};
+
+module.exports = { updateItemList, handleAddItem };
