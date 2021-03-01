@@ -1,20 +1,25 @@
 const { addItem, data } = require('./inventoryController');
 
 const validItems = ['cheesecake', 'apple pie', 'carrot cake'];
-const handleItemName = event => {
-    const itemName = event.target.value;
 
-    const errorMsg = window.document.getElementById('error-msg');
+const checkFormValues = () => {
+    const itemName = document.querySelector(`input[name="name"]`).value;
+    const quantity = document.querySelector(`input[name="quantity"]`).value;
 
-    if (itemName === '') {
-        errorMsg.innerHTML = '';
-    }
-    else if (!validItems.includes(itemName)) {
-        errorMsg.innerHTML = `${itemName} is not a valid item.`;
-    }
+    const itemNameIsEmpty = itemName === "";
+    const itemNameIsInvalid = !validItems.includes(itemName); const quantityIsEmpty = quantity === "";
+    const errorMsg = window.document.getElementById("error-msg");
+
+    if (itemNameIsEmpty) {
+        errorMsg.innerHTML = "";
+    } else if (itemNameIsInvalid) {
+        errorMsg.innerHTML = `${itemName} is not a valid item.`; }
     else {
-        errorMsg.innerHTML =  `${itemName} is a valid item.`
+        errorMsg.innerHTML = `${itemName} is valid!`;
     }
+
+    const submitButton = document.querySelector(`button[type="submit"]`);
+    submitButton.disabled = itemNameIsEmpty || itemNameIsInvalid || quantityIsEmpty;
 }
 
 const updateItemList = inventory =>  {
@@ -57,5 +62,5 @@ const handleAddItem = event => {
 module.exports = {
     updateItemList,
     handleAddItem,
-    handleItemName
+    checkFormValues
 };

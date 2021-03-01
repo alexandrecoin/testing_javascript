@@ -29,7 +29,7 @@ test('item name validation', () => {
    const itemField = screen.getByPlaceholderText("Item name");
    itemField..value = 'cheesecake';
 
-   const inputEvent = new Event('input');
+   const inputEvent = new Event('input', { bubbles: true });
 
    itemField.dispatchEvent(inputEvent);
 
