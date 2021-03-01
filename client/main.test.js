@@ -1,6 +1,6 @@
 const fs = require("fs");
 const initialHtml = fs.readFileSync("./index.html");
-const { screen, getByText } = require("@testing-library/dom");
+const { screen, getByText, fireEvent } = require("@testing-library/dom");
 
 beforeEach(() => {
     document.body.innerHTML = initialHtml;
@@ -27,11 +27,11 @@ test('adding items through the form', () => {
 
 test('item name validation', () => {
    const itemField = screen.getByPlaceholderText("Item name");
-   itemField..value = 'cheesecake';
 
-   const inputEvent = new Event('input', { bubbles: true });
-
-   itemField.dispatchEvent(inputEvent);
+    fireEvent.input(itemField, {
+        target: { value: "cheesecake" },
+        bubbles: true
+    });
 
    expect(screen.getByText("cheesecake is a valid item!")).toBeInTheDocument();
 });
