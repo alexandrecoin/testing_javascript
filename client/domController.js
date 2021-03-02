@@ -30,6 +30,8 @@ const updateItemList = inventory =>  {
     const isEmpty = isInventoryEmpty(inventory);
     isEmpty ? removeItemsButton.disabled = true : null
 
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+
     Object.entries(inventory).forEach(([itemName, quantity]) => {
         const listItem = window.document.createElement('li');
         listItem.innerHTML = `${itemName} - Quantity: ${quantity}`;

@@ -3,7 +3,10 @@ const { updateItemList, handleAddItem, handleItemName } = require('./domControll
 const initialHtml = fs.readFileSync("./index.html");
 const { screen, getByText } = require('@testing-library/dom')
 
-beforeEach(() => document.body.innerHTML = initialHtml);
+beforeEach(() => {
+    document.body.innerHTML = initialHtml;
+    localStorage.clear();
+});
 
 describe('updateItemList', () => {
     test('it renders a list of items', () => {
@@ -65,6 +68,14 @@ describe('updateItemList', () => {
         const inventory = {};
         updateItemList(inventory);
         expect(screen.getByText('Remove items')).toBeDisabled();
+    });
+
+    test('updates localStorage with the inventory', () => {
+       const inventory = { cheesecake: 2 };
+
+       updateItemList(inventory);
+
+       expect(localStorage.getItem("inventory")).toEqual(JSON.stringify(inventory));
     });
 });
 
