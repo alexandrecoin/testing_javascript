@@ -58,11 +58,26 @@ const handleAddItem = event => {
     const { name, quantity } = event.target.elements;
     addItem(name.value, parseInt(quantity.value, 10));
 
+    history.pushState({ inventory: { ...data.inventory } }, document.title);
+
     updateItemList(data.inventory);
 };
+
+const handleUndo = () => {
+    if (history.state === null) return;
+    // Asynchronous operation
+    history.back();
+}
+
+const handlePopState = () => {
+    data.inventory = history.state ? history.state.inventory : {};
+    updateItemList(data.inventory);
+}
 
 module.exports = {
     updateItemList,
     handleAddItem,
-    checkFormValues
+    checkFormValues,
+    handleUndo,
+    handlePopState
 };
